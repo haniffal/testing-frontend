@@ -115,24 +115,72 @@ async function uploadFile(formData) {
   }
 }
 
+// Save prediction result in local
+function savePredictionToHistory(predictionResult) {
+    const history = JSON.parse(localStorage.getItem('predictionHistory')) || [];
+    
+    // Tambahkan hasil baru ke riwayat
+    history.push(predictionResult);
+    
+    // Simpan kembali ke localStorage
+    localStorage.setItem('predictionHistory', JSON.stringify(history));
+    
+    // Update UI riwayat
+    displayHistory();
+}
+  
+// Fungsi untuk menampilkan history
+function displayHistory() {
+    const historyContainer = document.getElementById('historyList');
+    const history = JSON.parse(localStorage.getItem('predictionHistory')) || [];
+    
+    // Bersihkan riwayat sebelumnya
+    historyContainer.innerHTML = '';
+  
+    // Jika ada riwayat
+    if (history.length > 0) {
+      history.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `Prediksi pada ${item.timestamp}: ${item.result}`;
+        historyContainer.appendChild(li);
+      });
+    } else {
+      // Jika tidak ada riwayat
+      document.getElementById('noHistoryMessage').style.display = 'block';
+    }
+};
+  
+  // Panggil fungsi displayHistory saat halaman dimuat
+  window.onload = function() {
+    displayHistory();
+    };
+  
+
 // Show result to user
 function showPredictionResult(response) {
-  const { message, data } = response;
-
-  result.innerHTML = `
-    <div class="response-message">
-      <i class="fas fa-check"></i>
-      <span class="message">${message}</span>
-    </div>
-    <div class="prediction-result">
-      <div>
-        <div class="result-title">Result:</div>
-        <div>${data.result}</div>
+    const { message, data } = response;
+  
+    // Simpan hasil prediksi ke riwayat
+    const predictionResult = {
+      timestamp: new Date().toLocaleString(),
+      result: data.result,  // Hasil prediksi
+    };
+    savePredictionToHistory(predictionResult);
+  
+    result.innerHTML = `
+      <div class="response-message">
+        <i class="fas fa-check"></i>
+        <span class="message">${message}</span>
       </div>
-      <div>
-        <div class="result-title">Suggestion:</div>
-        <div>${data.suggestion}</div>
+      <div class="prediction-result">
+        <div>
+          <div class="result-title">Result:</div>
+          <div>${data.result}</div>
+        </div>
+        <div>
+          <div class="result-title">Suggestion:</div>
+          <div>${data.suggestion}</div>
+        </div>
       </div>
-    </div>
-  `;
-}
+    `;
+}  
